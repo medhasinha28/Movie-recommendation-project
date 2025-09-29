@@ -3,6 +3,7 @@ import pickle
 import pandas as pd
 import requests
 
+# 🎨 Custom background styling
 st.markdown(
     """
     <style>
@@ -14,30 +15,33 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# 🚀 Cached loading of pickle files from Hugging Face
 @st.cache_resource
 def load_pickle_from_url(url):
     response = requests.get(url)
-    if not response.ok or response.headers.get("Content-Type") != "application/octet-stream":
-        st.error("Failed to load file. The link may be incorrect or returning HTML instead of binary.")
+    if not response.ok or "html" in response.headers.get("Content-Type", ""):
+        st.error("Failed to load file. The URL may be incorrect or returning HTML instead of binary.")
         st.stop()
     return pickle.loads(response.content)
 
-# ✅ Use the correct raw URLs
+# 🔗 Hugging Face raw URLs
 dict_url = "https://huggingface.co/datasets/medha28/movie_recommender_files/resolve/main/movies.pkl"
 sim_url = "https://huggingface.co/datasets/medha28/movie_recommender_files/resolve/main/similarity.pkl"
 
-# ✅ Load with caching
+# 📦 Load data
 movies_dict = load_pickle_from_url(dict_url)
 similarity = load_pickle_from_url(sim_url)
 movies = pd.DataFrame(movies_dict)
 
+# 🖼️ Fetch poster from TMDB
 def fetch_poster(movie_id):
-    response = requests.get(
-        f'https://api.themoviedb.org/3/movie/{movie_id}?api_key=2526febf427e18fa30bbb4c76131002b&language=en-US'
-    )
+    api_key = "2526febf427e18fa30bbb4c76131002b"
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}&language=en-US"
+    response = requests.get(url)
     data = response.json()
-    return "https://image.tmdb.org/t/p/w500/" + data['poster_path']
+    return "https://image.tmdb.org/t/p/w500/" + data.get('poster_path', "")
 
+# 🎯 Recommendation logic
 def recommend(movie):
     movie_index = movies[movies['title'] == movie].index[0]
     distances = similarity[movie_index]
@@ -51,8 +55,9 @@ def recommend(movie):
         recommended_movies_poster.append(fetch_poster(movie_id))
     return recommend_movies, recommended_movies_poster
 
-st.title('Movie Recommender System')
-selected_movie = st.selectbox('Select the movies', movies['title'].values)
+# 🧠 UI
+st.title('🎥 Movie Recommender System')
+selected_movie = st.selectbox('Select a movie', movies['title'].values)
 
 if st.button('Recommend'):
     names, posters = recommend(selected_movie)
