@@ -66,4 +66,6 @@ if st.button('Recommend'):
     for idx, col in enumerate(cols):
         with col:
             st.markdown(f"**{names[idx]}**")
-            st.image(posters[idx], use_column_width=True)
+            st.image(posters[idx], use_container_width=True)
+
+
